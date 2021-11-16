@@ -24,4 +24,4 @@ class SlidingWindowTransformer(TransformerMixin):
             return DF
 
     def fit_transform(self,X, y=None,NwindowSize=10,col_names=None ,**fit_params):
-        return self._partialTransform(self,X,y,NwindowSize,col_names, **fit_params)
+        return self._partialTransform(X,y,NwindowSize,col_names,**fit_params)
