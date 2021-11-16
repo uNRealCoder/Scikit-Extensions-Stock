@@ -1,3 +1,3 @@
-from ._sliding_window_tfrmer import SlidingNWindow,SlidingNWindowWithOutput
+from ._sliding_window_tfrmer import SlidingWindowTransformer
 
-__all__=['SlidingNWindow','SlidingNWindowWithOutput']
+__all__=['SlidingWindowTransformer']
