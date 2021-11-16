@@ -5,19 +5,25 @@ from numpy import fft
 class FFT_1DTransformer(TransformerMixin):
     def __init__(self) -> None:
         super().__init__()
-    def fit_transform(self, X, y=None, Npoint=None,force_reshape=False ,**fit_params):
+    def fit_transform(self, X, y=None, Npoint=None,force_reshape=False,Real_Values=True ,**fit_params):
         X = np.array(X)
         if(force_reshape==True):
             X = np.ravel(X)
         assert X.ndim==1, "Data should be one dimensional, else pass force_reshape=True"
-        return fft.fft(X,Npoint,axis=-1)
+        if(Real_Values):
+            return fft.rfft(X,Npoint,axis=-1)
+        else:
+            return fft.fft(X,Npoint,axis=-1)
 
 class IFFT_1DTransformer(TransformerMixin):
     def __init__(self) -> None:
         super().__init__()
-    def fit_transform(self, X, y=None, Npoint=None,force_reshape=False ,**fit_params):
+    def fit_transform(self, X, y=None, Npoint=None,force_reshape=False,Real_Values=True ,**fit_params):
         X = np.array(X)
         if(force_reshape==True):
             X = np.ravel(X)
         assert X.ndim==1, "Data should be one dimensional, else pass force_reshape=True"
-        return fft.ifft(X,Npoint,axis=-1)
+        if(Real_Values):
+            return fft.irfft(X,Npoint,axis=-1)
+        else:
+            return fft.irfft(X,Npoint,axis=-1)
