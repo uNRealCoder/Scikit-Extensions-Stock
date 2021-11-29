@@ -39,6 +39,8 @@ class LinearAutoRegressiveScaler(TransformerMixin,BaseEstimator):
             DiffArray = numpy.insert(DiffArray,[0],0,axis=None)
         if(self.__isInitialized()==False):
             self.MaxDiff = numpy.max(numpy.abs(DiffArray))
+        if(int(self.MaxDiff)==0): #0 protection
+            return DiffArray
         DiffArray = DiffArray/self.MaxDiff
         return DiffArray
     
