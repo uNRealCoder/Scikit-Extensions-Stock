@@ -26,5 +26,7 @@ class SlidingWindowTransformer(TransformerMixin):
             DF.columns = col_names
             return DF
 
-    def fit_transform(self,X, y=None,NwindowSize=10,col_names=None,force_reshape=False,**fit_params):
+    def fit_transform(self,X, y=None,NwindowSize=10,col_names=None,col_namePrefix=None,force_reshape=False,**fit_params):
+        if(col_namePrefix != None):
+            col_names = [(col_namePrefix+str(i)) for i in range(0,NwindowSize)]
         return self._partialTransform(X,y,NwindowSize,col_names,force_reshape,**fit_params)
