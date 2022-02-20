@@ -1,6 +1,6 @@
 import numpy as np
 import pandas
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 from numpy import fft
 class FFT_1DTransformer(TransformerMixin):
     def __init__(self) -> None:
@@ -14,6 +14,8 @@ class FFT_1DTransformer(TransformerMixin):
             return fft.rfft(X,Npoint,axis=-1)
         else:
             return fft.fft(X,Npoint,axis=-1)
+    def inverse_transform():
+        pass
 
 class IFFT_1DTransformer(TransformerMixin):
     def __init__(self) -> None:
