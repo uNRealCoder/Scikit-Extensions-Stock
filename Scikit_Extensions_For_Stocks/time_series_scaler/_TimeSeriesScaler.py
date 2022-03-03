@@ -202,3 +202,39 @@ class Linear1DGainScaler(TransformerMixin,BaseEstimator):
             val += f[i-1]
             f.append(val)
         return numpy.array(deepcopy(f)).astype(float)
+
+class Linear2DGainScaler(TransformerMixin,BaseEstimator):
+    def __init__(self):
+        self.Scalers = []
+    def fit(self, X, y=None,axis=-1,**fit_params):
+        """Fit the Linear Auto Regressive Transformer on X. Expects a 2D numerical Array. 
+        y will be ignored.
+        Args:
+            X {1D nd.array like} of shape (n,): Data for transformer to fit
+            y Will be ignored.
+            n (int, optional): NOT SUPPORTED . nth difference. Defaults to 1.
+            prepend (bool, optional): Prepend a 0 to data. Defaults to False.
+            forceReshape (bool, optional): Tries to force the shape of the array to 1D. Defaults to False.
+        """
+        X = numpy.array(deepcopy(X))
+        for val in numpy.rollaxis(X,axis):
+            L1DG = Linear1DGainScaler()
+            L1DG.fit(val)
+            self.Transformers.append(L1DG)
+    def transform(self,X,y=None,axis=-1,prepend = True,forceReshape=False):
+        """[summary]
+
+        Args:
+            X ([type]): [description]
+            y ([type], optional): [description]. Defaults to None.
+        """
+        X = numpy.array(deepcopy(X))
+        Res = []
+        assert len(self.Transformers) == X.shape[axis]
+        n = X.shape[axis]
+        for ind,val in zip(range(0,n),numpy.rollaxis(X,axis)):
+            Res.append(self.Transformers[ind].transform(val,prepend=prepend,forceReshape=forceReshape))
+        return numpy.array(Res)
+    def fit_transform(self, X, y=None,axis=-1,prepend = True,forceReshape=False, **fit_params):
+        self.fit(X=X,y=y,axis=axis,**fit_params)
+        return self.transform(X=X,y=y,axis=axis,prepend=prepend,forceReshape=forceReshape,**fit_params)
