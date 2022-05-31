@@ -130,6 +130,15 @@ class Linear1DGainScaler(TransformerMixin,BaseEstimator):
     """
     Transformers Time Series/Linear Data by calculating AR(1) and dividing by previous value.
     """
+    def __init__(self):
+        self._initialValue = None
+    def __reset_state(self):
+        self._initialValue = None
+    def __isInitialized(self):
+        if(self._initialValue is None):
+            return False
+        else:
+            return True
     def __partial_fit(self,X,y=None,forceReshape=False,**fit_params):
         """Fit the Linear Time Series Transformer on X. Expects a 1D numerical Array. 
         y will be ignored.
@@ -143,8 +152,6 @@ class Linear1DGainScaler(TransformerMixin,BaseEstimator):
         if(forceReshape==True):
             X = numpy.ravel(X) #OMG ravel has flattened them. Will someone stop the match already?!
         assert X.ndim == 1, "Array should be 1D"
-        if(self.__isInitialized()==False):
-            self._initialValue = deepcopy(X[0])
         DiffArray = numpy.diff(X, 1)
         DiffArray = numpy.insert(DiffArray,[0],0,axis=None)
         DiffArray[1:] = numpy.divide(DiffArray[1:],X[:-1])
@@ -163,6 +170,17 @@ class Linear1DGainScaler(TransformerMixin,BaseEstimator):
             val += f[i-1]
             f.append(val)
         return numpy.array(deepcopy(f)).astype(float)
+    def fit(self, X, y=None, **fit_params):
+        X = numpy.array(deepcopy(X)).astype(float)
+        self.__reset_state()
+        self._initialValue = deepcopy(X[0])
+    def transform(self, X, y=None, forceReshape=False, **fit_params):
+        if(self.__isInitialized()==False):
+            raise Exception("Not fit!")
+        return self.__partial_fit(X,y,forceReshape=forceReshape,**fit_params)
+    def fit_transform(self, X, y=None, forceReshape=False,**fit_params):
+        self.fit(X,y,**fit_params)
+        return self.transform(X,y,forceReshape,**fit_params)
 
 class Linear2DGainScaler(TransformerMixin,BaseEstimator):
     def __init__(self):
@@ -214,11 +232,9 @@ class Linear1DLogGainScaler(TransformerMixin,BaseEstimator):
         """
 
         """
-        X = numpy.array(deepcopy(X)).astype(float) #Paranoia
         if(forceReshape==True):
             X = numpy.ravel(X) #OMG ravel has flattened them. Will someone stop the match already?!
         assert X.ndim == 1, "Array should be 1D"
-        self._initialValue = deepcopy(X[0])        
         Xshift = numpy.roll(X,1)
         Xshift[0] = Xshift[1]
         return deepcopy(numpy.log10(X/Xshift))
@@ -236,6 +252,8 @@ class Linear1DLogGainScaler(TransformerMixin,BaseEstimator):
             n (int, optional): NOT SUPPORTED . nth difference. Defaults to 1.
             forceReshape (bool, optional): Tries to force the shape of the array to 1D. Defaults to False.
         """
+        X = numpy.array(deepcopy(X)).astype(float) #Paranoia
+        self._initialValue = deepcopy(X[0])
         self.__partial_fit(X, y, **fit_params)
         pass
     def transform(self,X,**fit_params):
@@ -260,6 +278,8 @@ class Linear1DLogGainScaler(TransformerMixin,BaseEstimator):
 class Linear2DLogGainScaler(TransformerMixin,BaseEstimator):
     def __init__(self):
         self.LogScalers = []
+    def __reset_state__(self):
+        self.LogScalers = []
     def fit(self, X, y=None,axis=-1,**fit_params):
         """Fit the Linear Auto Regressive Transformer on X. Expects a 2D numerical Array. 
         y will be ignored.
@@ -270,6 +290,7 @@ class Linear2DLogGainScaler(TransformerMixin,BaseEstimator):
             prepend (bool, optional): Prepend a 0 to data. Defaults to False.
             forceReshape (bool, optional): Tries to force the shape of the array to 1D. Defaults to False.
         """
+        self.__reset_state__()
         X = numpy.array(deepcopy(X))
         for val in numpy.rollaxis(X,axis):
             L1DG = Linear1DLogGainScaler()
@@ -300,3 +321,36 @@ class Linear2DLogGainScaler(TransformerMixin,BaseEstimator):
         for ind,val in zip(range(0,n),numpy.rollaxis(X,axis)):
             Res.append(self.LogScalers[ind].inverse_transform(val))
         return deepcopy(numpy.array(Res).T)
+
+class LogScale1D(TransformerMixin,BaseEstimator):
+    def __init__(self,base=numpy.e):
+        self.base = base
+        super().__init__()
+    def __partial_fit(self, X, y=None, forceReshape=False,**fit_params):
+        if(forceReshape==True):
+            X = numpy.ravel(X) #OMG ravel has flattened them. Will someone stop the match already?!
+        assert X.ndim == 1, "Array should be 1D"
+        return deepcopy(numpy.log(X)/numpy.log(self.base))
+    def inverse_transform(self,X):
+        X = numpy.array(deepcopy(X)).astype(float)
+        assert X.ndim == 1, "Array should be 1D"
+        return deepcopy(self.base ** X)
+
+    def fit(self,X,y=None, **fit_params):
+        pass
+    def transform(self,X,**fit_params):
+        """
+        Transform 1D array X.
+
+        Args:
+            X {1D nd.array like} of shape (n,): Data for transformer to transform
+            forceReshape (bool, optional): [description]. Defaults to False.
+        """
+        return self.__partial_fit(X,y=None, **fit_params)
+    def fit_transform(self, X, y=None, **fit_params):
+        if y is None:
+            self.fit(X, **fit_params)
+            return self.transform(X,**fit_params)
+        else:
+            self.fit(X, y, **fit_params)
+            return self.transform(X,**fit_params)
